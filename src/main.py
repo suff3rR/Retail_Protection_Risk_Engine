@@ -1,1 +1,4 @@
 ## GOAL : FULLY AUTONOMOUS EARLY PUMP-DUMP ANOMALY DETECTION SYSTEM FOR THE INDIAN STOCK MARKET
+import sklearn
+import pandas as pd
+import numpy as np
