@@ -1,5 +1,3 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
-
 # --- Python Virtual Environments ---
 # This keeps your OS-specific environment files off GitHub
 .venv/
@@ -44,6 +42,13 @@ test.py
 
 # --- Python Cache ---
 __pycache__/
+*.py[cod]
 *$py.class
+models.py
 
 # helper code
+
+MLIF.py
+UZSD.py
+helpcode.py
+
