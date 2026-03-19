@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 
-
 def build_ground_truth(data_folder="data", output_path="data/labeled_ground_truth.csv"):
     """
     Extracts ground truth fraud labels from bulk_deal_flag column
@@ -20,7 +19,6 @@ def build_ground_truth(data_folder="data", output_path="data/labeled_ground_trut
     df_list = []
     for file in all_files:
 
-        # Skip the ground truth file itself if it lives in the same folder
         if file.resolve() == output_file:
             continue
 

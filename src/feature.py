@@ -21,9 +21,6 @@ def get_yfinance_ticker(df):
 
     return symbol + ".NS"
     
-
-
-
 def get_shares_outstanding(symbol):
     
     ticker = yf.Ticker(symbol)
@@ -43,30 +40,10 @@ def add_market_cap(df, symbol):
 
     return df
 
-
 def add_manipulation_features(df):
-    """
-    Adds pump-and-dump detection features to stock dataframe.
-
- 
-    - LOWERED is_manipulated threshold from 3 → 2.
-      With penny stock removed, max possible score is now 4.
-      Threshold of 3 was triggering on only 2/730 rows.
-      Threshold of 2 gives the model meaningful positive examples to learn from.
- 
-    - ADDED volume_price_divergence: high volume with flat/falling price
-      is a classic distribution phase signal (smart money exiting).
- 
-    - ADDED price_zscore: flags statistically extreme price moves
-      relative to the stock's own recent history, not an absolute cutoff.
-    """
- 
     df = df.sort_values(["symbol", "date"]).copy()
- 
-    # ── 1. Basic price calculations ──────────────────────────────────────────
     df["pct_change"] = df.groupby("symbol")["close"].pct_change()
  
-    # ── 2. Volume multiplier ─────────────────────────────────────────────────
     df["vol_20_avg"] = (
         df.groupby("symbol")["volume"]
         .transform(lambda x: x.rolling(20).mean())
@@ -160,40 +137,24 @@ def add_manipulation_features(df):
 def add_pump_dump_features(df):
 
     df = df.sort_values(['symbol', 'date'])
-
-    #Daily Return %
     df['daily_return'] = df.groupby('symbol')['close'].pct_change()
-
-    # 5-day Price Change
     df['price_change_5d'] = df.groupby('symbol')['close'].pct_change(5)
-
-    #Volume Spike (current volume / 5-day avg volume)
     df['avg_volume_5d'] = df.groupby('symbol')['volume'].transform(lambda x: x.rolling(5).mean())
     df['volume_spike'] = df['volume'] / df['avg_volume_5d']
-
-    #Volatility (5-day rolling std of returns)
     df['volatility_5d'] = df.groupby('symbol')['daily_return'].transform(lambda x: x.rolling(5).std())
 
-
-
-
-# Z SCORE
     def zscore(x):
         return (x - x.mean()) / x.std()
 
     df['volume_zscore'] = df.groupby('symbol')['volume'].transform(zscore)
     df['return_zscore'] = df.groupby('symbol')['daily_return'].transform(zscore)
 
-    # Pump Strength (big price increase + volume spike)
     df['pump_strength'] = df['price_change_5d'] * df['volume_spike']
 
-    # Dump Strength (sudden negative return)
     df['dump_strength'] = df['daily_return'].rolling(3).sum()
 
-    # Price Acceleration (second derivative approx)
     df['price_acceleration'] = df.groupby('symbol')['daily_return'].diff()
 
-    # Clean NaN
     df = df.replace([np.inf, -np.inf], 0)
     df = df.fillna(0)
 
