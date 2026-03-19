@@ -10,19 +10,8 @@ import joblib
 
 sys.path.append(str(Path().resolve() / "src"))
 
-
-
-
-
-#stock = "RELIANCE.BO"
-#test_data = yfinance_data_download.data_yf(stock,"2022-01-01","2023-12-31")
-
-
-
-
 def IsolationForest_function(test_data):
 
-   # print("data brought in successfully!")
     test_features = ['open','low','close','volume','manipulation_score'] ## Add feature Variables
     y = test_data.high
     X = test_data[test_features] 
@@ -34,22 +23,18 @@ def IsolationForest_function(test_data):
     test_anomaly_score = test_model.decision_function(val_X)
     ml_risk_score = 100 * (1 - (test_anomaly_score - test_anomaly_score.min()) /
                         (test_anomaly_score.max() - test_anomaly_score.min()))
- #   test_mae = mean_absolute_error(val_y,test_predictions)
- #   print(ml_risk_score)
-  #  print("risk scores were printed")
-
-   # Work ONLY on val_X
+ 
     val_X = val_X.copy()
 
     val_X['ml_risk_score'] = ml_risk_score
 
-    # Rule-based score
+  
     val_X['rule_risk_score'] = (
         val_X['manipulation_score'] /
         val_X['manipulation_score'].max()
     ) * 100
 
-    # Final hybrid score
+
     val_X['final_risk_score'] = (
         0.6 * val_X['ml_risk_score'] +
         0.4 * val_X['rule_risk_score']
@@ -71,18 +56,13 @@ def IsolationForest_function(test_data):
 
 if __name__ == "__main__":
     cwd = Path.cwd()
-   # print(cwd)
-
     dataset_path = cwd / "data/cleaned_nse_data.csv"
-   # print(dataset_path)
-
+   
     df = pd.read_csv(dataset_path)
     df = rename_columns(df=df)
     df['marketCap'] = 1e9
     df = add_manipulation_features(df=df)
-   # print(df.columns)
-
-
+   
     results = IsolationForest_function(test_data=df)
     top_risky = results.sort_values("final_risk_score", ascending=False)
     print("Top 10 Most Suspicious Events")

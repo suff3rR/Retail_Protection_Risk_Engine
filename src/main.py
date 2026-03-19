@@ -16,21 +16,18 @@ MODEL_PATH = f"models/isolation_forest_{timestamp}.pkl"
 
 if __name__ == "__main__":
 
-    # ── 1. Load & prepare data ───────────────────────────────────────────────
     df = load_all_data()
     df = rename_columns(df)
     symbol = get_yfinance_ticker(df)
     df = add_market_cap(df, symbol)
     df = add_manipulation_features(df)
 
-    # ── 2. Train / load model ────────────────────────────────────────────────
     model = train_model(df, MODEL_PATH, force_retrain=False)
 
-    # ── 3. Score every row ───────────────────────────────────────────────────
     X = df[MODEL_FEATURES].fillna(0)
     ml_scores = model.decision_function(X)
 
-    # ── 4. Build final risk results then aggregate to per-stock summary ───────
+
     results = calculate_final_risk(df, ml_scores)
 
     summary = (
@@ -51,7 +48,6 @@ if __name__ == "__main__":
     summary["avg_risk_score"] = summary["avg_risk_score"].round(2)
     summary["max_risk_score"] = summary["max_risk_score"].round(2)
 
-    # Risk category based on average risk score
     def risk_label(score):
         if score >= 80:
             return "High Risk"
@@ -71,9 +67,7 @@ if __name__ == "__main__":
     print(summary[display_cols].sort_values("avg_risk_score", ascending=False).to_string(index=False))
     print()
 
-    # ── 5. Build ground truth labels from bulk_deal_flag ────────────────────
     print("\n── Building ground truth labels ──────────────────────────────────")
     build_ground_truth(data_folder="data", output_path=GROUND_TRUTH_PATH)
 
-    # ── 6. Evaluate model against ground truth ───────────────────────────────
     evaluate_model(results, ground_truth_path=GROUND_TRUTH_PATH) 
