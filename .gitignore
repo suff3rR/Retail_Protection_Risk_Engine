@@ -45,11 +45,5 @@ test.py
 # --- Python Cache ---
 __pycache__/
 *$py.class
-models.py
 
 # helper code
-
-MLIF.py
-UZSD.py
-helpcode.py
-
