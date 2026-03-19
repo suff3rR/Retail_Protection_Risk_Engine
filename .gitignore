@@ -1,0 +1,54 @@
+# --- Python Virtual Environments ---
+# This keeps your OS-specific environment files off GitHub
+.venv/
+venv/
+env/
+bin/
+Lib/
+Scripts/
+pyvenv.cfg
+static/
+
+# --- Kaggle & Secrets ---
+# Keeps your API keys and heavy data local
+.kaggle/
+kaggle.json
+.env
+data/
+data_uncleaned/
+Synthetic_Data/
+*.zip
+*.csv
+*.json
+
+# --- VS Code & IDEs ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS Specific Files ---
+# Mac junk
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows junk
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+test.py
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+models.py
+
+# helper code
+
+MLIF.py
+UZSD.py
+helpcode.py
+
