@@ -11,7 +11,13 @@ def build_ground_truth(data_folder="data", output_path="data/labeled_ground_trut
     is_fraud = 1 if bulk_deal_flag == YES, else 0
     """
     path = Path(data_folder)
-    output_file = Path(output_path).resolve()
+    out_path = Path(output_path)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.parent / path
+    if not out_path.is_absolute():
+        out_path = Path(__file__).resolve().parent.parent / out_path
+
+    output_file = out_path.resolve(strict=False)
     all_files = list(path.glob("*.csv"))
 
     if not all_files:
@@ -48,12 +54,12 @@ def build_ground_truth(data_folder="data", output_path="data/labeled_ground_trut
     combined["is_fraud"] = (combined["bulk_deal_flag"].str.upper() == "YES").astype(int)
     ground_truth = combined[["symbol", "date", "is_fraud"]]
 
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    ground_truth.to_csv(output_path, index=False)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    ground_truth.to_csv(out_path, index=False)
 
     total = len(ground_truth)
     fraud_count = ground_truth["is_fraud"].sum()
-    print(f"Ground truth saved → {output_path}")
+    print(f"Ground truth saved → {out_path}")
     print(f"  Total rows : {total}")
     print(f"  Fraud days : {fraud_count} ({100 * fraud_count / total:.1f}%)")
     print(f"  Clean days : {total - fraud_count}")

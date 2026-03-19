@@ -1,42 +1,56 @@
-def calculate_final_risk(df, ml_risk_score):
+import joblib
+import os
+from pathlib import Path
+from sklearn.ensemble import IsolationForest
 
-    df = df.copy()
-    df['ml_risk_score'] = ml_risk_score
 
-    # Normalize ML score to 0–100
-    score_min = df['ml_risk_score'].min()
-    score_max = df['ml_risk_score'].max()
-    if score_max == score_min:
-        df['ml_risk_score_norm'] = 50.0
-    else:
-        df['ml_risk_score_norm'] = 100 * (
-            1 - (df['ml_risk_score'] - score_min) / (score_max - score_min)
+# These are the only columns the model should learn from.
+# Raw OHLCV (open, close, volume etc.) are excluded — IsolationForest
+# would treat normal price levels as anomalies, which is meaningless.
+# Only engineered signals that actually encode manipulation behaviour go in.
+MODEL_FEATURES = [
+    "volume_multiplier",        # how unusual today's volume is vs 20d avg
+    "upper_circuit_streak",     # consecutive days hitting price ceiling
+    "suspicious_delivery",      # price up but delivery % falling
+    "negative_corr_flag",       # price moving without genuine buying
+    "volume_price_divergence",  # high volume + flat/falling price (distribution)
+    "extreme_price_move",       # statistically abnormal price move (z-score)
+    "manipulation_score",       # composite rule score (0–6)
+]
+
+
+def train_model(df, model_path, force_retrain=True):
+    """
+    Trains or loads an IsolationForest model.
+    Set force_retrain=True to ignore any saved model and retrain from scratch.
+    """
+
+    if os.path.exists(model_path) and not force_retrain:
+        print(f"Loading existing model from {model_path}")
+        return joblib.load(model_path)
+
+    print("Training new model...")
+
+    # Validate all expected features exist
+    missing = [f for f in MODEL_FEATURES if f not in df.columns]
+    if missing:
+        raise ValueError(
+            f"Missing features in dataframe: {missing}\n"
+            f"Make sure add_manipulation_features() ran before train_model()."
         )
 
-    # Normalize rule score to 0–100
-    # Guard against divide-by-zero when manipulation_score is all 0s
-    rule_max = df['manipulation_score'].max()
-    if rule_max == 0 or rule_max != rule_max:  # 0 or NaN
-        df['rule_risk_score'] = 0.0
-    else:
-        df['rule_risk_score'] = (df['manipulation_score'] / rule_max) * 100
+    X = df[MODEL_FEATURES].fillna(0)
 
-    # Hybrid: 60% ML signal + 40% rule signal
-    df['final_risk_score'] = (
-        0.6 * df['ml_risk_score_norm'] +
-        0.4 * df['rule_risk_score']
+    model = IsolationForest(
+        n_estimators=200,       # more trees = more stable scores
+        contamination=0.10,     # ~10% — matches observed 7.8% fraud rate with buffer
+        random_state=42,
     )
 
-    def risk_label(score):
-        if score >= 80:
-            return "High Risk"
-        elif score >= 60:
-            return "Moderate Risk"
-        elif score >= 30:
-            return "Low Risk"
-        else:
-            return "Normal"
+    model.fit(X)
 
-    df['risk_category'] = df['final_risk_score'].apply(risk_label)
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    joblib.dump(model, model_path)
+    print(f"Model saved → {model_path}")
 
-    return df
+    return model

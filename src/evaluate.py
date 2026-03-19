@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from sklearn.metrics import (
     precision_score,
     recall_score,
@@ -30,9 +31,13 @@ def evaluate_model(results: pd.DataFrame, ground_truth_path: str = "data/labeled
         Merged dataframe with ground truth + predictions (useful for inspection)
     """
 
+    gt_path = Path(ground_truth_path)
+    if not gt_path.is_absolute():
+        gt_path = Path(__file__).resolve().parent.parent / gt_path
+
     # ── Load ground truth ────────────────────────────────────────────────────
     try:
-        gt = pd.read_csv(ground_truth_path, parse_dates=["date"])
+        gt = pd.read_csv(gt_path, parse_dates=["date"])
     except FileNotFoundError:
         print(f"ERROR: Ground truth file not found at '{ground_truth_path}'")
         print("       Run ground_truth.py first to generate it.")
@@ -97,7 +102,7 @@ def evaluate_model(results: pd.DataFrame, ground_truth_path: str = "data/labeled
         threshold=best_threshold,
     )
 
-    # ── Print missed fraud days (most useful for debugging) ──────────────────
+    # ── Print missed fraud days ──────────────────────────────────────────────
     missed = merged[(merged["is_fraud"] == 1) & (merged["predicted_fraud"] == 0)]
     if not missed.empty:
         print("\n  Missed fraud days (false negatives):")
@@ -107,12 +112,28 @@ def evaluate_model(results: pd.DataFrame, ground_truth_path: str = "data/labeled
             .to_string(index=False)
         )
 
-    # ── Print false alarms ───────────────────────────────────────────────────
     false_alarms = merged[(merged["is_fraud"] == 0) & (merged["predicted_fraud"] == 1)]
     if not false_alarms.empty:
         print(f"\n  False alarms (flagged but clean): {len(false_alarms)} days")
 
-    return merged
+    # ── Return metrics dict for UI ───────────────────────────────────────────
+    metrics = {
+        "total_days" : len(merged),
+        "fraud_days" : int(y_true.sum()),
+        "flagged"    : int(y_pred.sum()),
+        "tp"         : int(tp),
+        "fp"         : int(fp),
+        "fn"         : int(fn),
+        "tn"         : int(tn),
+        "precision"  : round(precision, 3),
+        "recall"     : round(recall, 3),
+        "f1"         : round(f1, 3),
+        "auprc"      : round(auprc, 3),
+        "roc_auc"    : round(roc_auc, 3) if roc_auc is not None else None,
+        "baseline"   : round(int(y_true.sum()) / len(merged), 3),
+    }
+
+    return merged, metrics
 
 
 def _print_report(total, fraud_count, flagged_count,

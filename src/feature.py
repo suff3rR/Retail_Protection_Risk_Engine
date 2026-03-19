@@ -25,17 +25,13 @@ def get_yfinance_ticker(df):
 
 
 def get_shares_outstanding(symbol):
-    
     ticker = yf.Ticker(symbol)
-    
     info = ticker.info
-    
     return info.get("sharesOutstanding")
 
 
 
 def add_market_cap(df, symbol):
-
     shares = get_shares_outstanding(symbol)
 
     df["shares_outstanding"] = shares

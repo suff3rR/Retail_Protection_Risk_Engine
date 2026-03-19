@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-# --- Python Virtual Environments ---
-=======
 # Created by venv; see https://docs.python.org/3/library/venv.html
 
->>>>>>> f5e5add6dbe8a3d5457ff6315c3d054a3a049722
 # This keeps your OS-specific environment files off GitHub
 .venv/
 venv/

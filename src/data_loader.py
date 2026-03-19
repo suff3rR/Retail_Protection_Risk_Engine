@@ -7,6 +7,11 @@ REQUIRED_COLUMNS = {"symbol", "date", "close"}
 
 def load_all_data(data_folder="data"):
     path = Path(data_folder)
+    if not path.is_absolute():
+        # Interpret relative data paths as relative to the repo root (one level above /src),
+        # not relative to the current working directory.
+        path = Path(__file__).resolve().parent.parent / path
+
     all_files = list(path.glob("*.csv"))
 
     if not all_files:
