@@ -51,8 +51,6 @@ def add_manipulation_features(df):
     df["volume_multiplier"] = df["volume"] / df["vol_20_avg"]
     df["is_volume_spike"] = (df["volume_multiplier"] > 5).astype(int)
  
-    # ── 3. Upper circuit streak ──────────────────────────────────────────────
-    # Approximation: >= 4.9% daily move = hitting upper circuit band
     df["hit_upper_circuit"] = (df["pct_change"] >= 0.049).astype(int)
     df["upper_circuit_streak"] = (
         df.groupby("symbol")["hit_upper_circuit"]
@@ -60,8 +58,6 @@ def add_manipulation_features(df):
         .reset_index(level=0, drop=True)
     )
  
-    # ── 4. Delivery % divergence ─────────────────────────────────────────────
-    # Price rising but delivery % falling = speculative/manipulative buying
     df["delivery_pct"] = (df["deliverable_volume"] / df["volume"]) * 100
     df["delivery_5d_avg"] = (
         df.groupby("symbol")["delivery_pct"]
@@ -72,26 +68,18 @@ def add_manipulation_features(df):
         (df["delivery_pct"] < df["delivery_5d_avg"])
     ).astype(int)
  
-    # ── 5. Price–volume correlation ──────────────────────────────────────────
-    # Negative correlation = price moving without genuine buying pressure
     df["price_volume_corr"] = (
         df.groupby("symbol")
         .apply(lambda x: x["close"].rolling(10).corr(x["volume"]))
         .reset_index(level=0, drop=True)
     )
     df["negative_corr_flag"] = (df["price_volume_corr"] < -0.3).astype(int)
- 
-    # ── 6. NEW: Volume–price divergence ─────────────────────────────────────
-    # High volume + flat or falling price = distribution phase
-    # (insiders selling into retail volume, classic pump exit signal)
+
     df["volume_price_divergence"] = (
         (df["volume_multiplier"] > 2) &
         (df["pct_change"] <= 0)
     ).astype(int)
  
-    # ── 7. NEW: Price z-score ────────────────────────────────────────────────
-    # Flags statistically extreme price moves vs the stock's own 20-day history
-    # Avoids the absolute ₹50 cutoff that penalised both stocks permanently
     df["close_20_mean"] = (
         df.groupby("symbol")["close"]
         .transform(lambda x: x.rolling(20).mean())
@@ -106,33 +94,23 @@ def add_manipulation_features(df):
     )
     df["extreme_price_move"] = (df["price_zscore"].abs() > 2).astype(int)
  
-    # ── 8. Penny stock flag (reference only — NOT in manipulation_score) ─────
-    # Kept for human review but excluded from scoring.
-    # Both stocks are almost always under ₹50, making this a constant, not a signal.
     df["is_penny_stock"] = (
         (df["close"] < 50) |
         (df["marketCap"] < 500e7)
     ).astype(int)
  
-    # ── 9. Manipulation score (max possible = 6) ─────────────────────────────
     df["manipulation_score"] = (
-        df["is_volume_spike"] +                              # 1 pt
-        (df["upper_circuit_streak"] >= 3).astype(int) +     # 1 pt
-        df["suspicious_delivery"] +                          # 1 pt
-        df["negative_corr_flag"] +                           # 1 pt
-        df["volume_price_divergence"] +                      # 1 pt
-        df["extreme_price_move"]                             # 1 pt
+        df["is_volume_spike"] +                              
+        (df["upper_circuit_streak"] >= 3).astype(int) +     
+        df["suspicious_delivery"] +                          
+        df["negative_corr_flag"] +                          
+        df["volume_price_divergence"] +                      
+        df["extreme_price_move"]                             
     )
- 
-    # ── 10. is_manipulated flag ──────────────────────────────────────────────
-    # Threshold lowered from 3 → 2.
-    # Old threshold: 2/730 rows flagged (useless for training).
-    # New threshold: gives the model enough positive examples to learn from.
+
     df["is_manipulated"] = (df["manipulation_score"] >= 2).astype(int)
  
     return df
-
-
 
 def add_pump_dump_features(df):
 

@@ -16,7 +16,6 @@ def download_dataset():
     file_name="Data/ETFs/agg.us.txt"
     )
 
-
 if __name__ == "__main__":
     download_dataset()
 

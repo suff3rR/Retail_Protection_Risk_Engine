@@ -3,8 +3,6 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-
-
 #Initializing API
 BASE_DIR = Path(__file__).resolve().parent.parent
 env_path = BASE_DIR / '.kaggle/kaggle.json/.env'

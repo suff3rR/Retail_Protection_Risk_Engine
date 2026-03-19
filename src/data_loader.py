@@ -1,7 +1,6 @@
 import pandas as pd
 from pathlib import Path
 
-# Columns that every valid raw stock CSV must have
 REQUIRED_COLUMNS = {"symbol", "date", "close"}
 
 
