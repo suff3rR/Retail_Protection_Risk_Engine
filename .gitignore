@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 # --- Python Virtual Environments ---
+=======
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+>>>>>>> f5e5add6dbe8a3d5457ff6315c3d054a3a049722
 # This keeps your OS-specific environment files off GitHub
 .venv/
 venv/
@@ -44,6 +49,7 @@ test.py
 __pycache__/
 *.py[cod]
 *$py.class
+<<<<<<< HEAD
 models.py
 
 # helper code
@@ -51,4 +57,14 @@ models.py
 MLIF.py
 UZSD.py
 helpcode.py
+=======
+
+
+
+
+
+
+
+
+>>>>>>> f5e5add6dbe8a3d5457ff6315c3d054a3a049722
 
