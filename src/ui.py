@@ -235,8 +235,8 @@ def _metrics_panel(parent, m):
     scores.pack(fill="x")
 
     entries = [
-        ("PRECISION",  m.get("precision"), "of flags that were real fraud"),
-        ("RECALL",     m.get("recall"),    "of real fraud days caught"),
+        #("PRECISION",  m.get("precision"), "of flags that were real fraud"),
+        #("RECALL",     m.get("recall"),    "of real fraud days caught"),
         ("F1 SCORE",   m.get("f1"),        "harmonic mean"),
         ("AUPRC",      m.get("auprc"),     f"baseline ≈ {m.get('baseline', 0.078):.3f}"),
         ("ROC-AUC",    m.get("roc_auc"),   "0.5 = random"),
