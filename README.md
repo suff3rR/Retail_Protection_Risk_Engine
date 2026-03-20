@@ -266,9 +266,7 @@ This engine is designed to be **retail-first, real-time, and embeddable** — a 
 
 ---
 
-## ⚠️ Disclaimer
 
-This project is a research prototype built for a hackathon. Risk scores are **not financial advice**. Ground truth labels are proxy signals derived from NSE bulk deal flags — not confirmed legal findings of market manipulation.
 
 ---
 
